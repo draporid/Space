@@ -1,0 +1,252 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spaceship Hyperdrive</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+            position: relative;
+        }
+
+        #spaceship {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            background-image: url('spaceship.png');
+            background-size: contain;
+            display: none;  /* Initially hidden */
+            pointer-events: none;
+
+#engineBeam {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 40px;
+    height: calc(150vh);  /* Extended height to always reach the bottom */
+    background: linear-gradient(to bottom, rgba(255, 0, 0, 0.8), rgba(255, 100, 0, 0.6), rgba(255, 0, 0, 0.4), transparent);
+    background-size: 100% 200%;
+    transform-origin: top center;
+    border-radius: 10px;
+    animation: flowBeam 0.8s infinite, pulseBeam 1s infinite alternate;
+    opacity: 0.9;
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+  /* So it doesn't interfere with other interactions */
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: white;
+            animation: moveStar linear infinite;
+        }
+
+        @keyframes moveStar {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(100vh);
+            }
+        }
+    
+.bullet {
+    position: absolute;
+    width: 5px;
+    height: 15px;
+    background-color: rgba(255, 0, 0, 0.9);
+    border-radius: 50%;
+    animation: shootBullet 1s linear infinite;
+}
+
+@keyframes shootBullet {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(-100vh);
+    }
+}
+
+
+.meteorite {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(150, 150, 150, 0.8);
+    border-radius: 50%;
+    animation: fallMeteorite 5s linear infinite;
+}
+
+@keyframes fallMeteorite {
+    0% {
+        transform: translateY(-50px);
+    }
+    100% {
+        transform: translateY(100vh);
+    }
+}
+
+
+.meteorite {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: none;
+    background-image: url('Meteor.png');
+    background-size: cover;
+    animation: fallMeteorite 5s linear infinite;
+}
+
+.explosion {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 223, 0, 0.9), rgba(255, 0, 0, 0.7), transparent);
+    animation: explode 0.5s forwards;
+}
+
+@keyframes explode {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+</style>
+</head>
+<body>
+    
+    <div id="spaceship">
+        <div id="engineBeam"></div>
+    </div>
+    
+    <script>
+        let spaceship = document.getElementById("spaceship");
+        document.addEventListener("mousemove", function(event) {
+            spaceship.style.display = "block";  // Show the spaceship
+            spaceship.style.left = event.clientX - 32 + "px";  // Center it on the cursor
+            spaceship.style.top = event.clientY - 64 + "px";  // Place it slightly above the cursor
+        });
+
+        for (let i = 0; i < 150; i++) {
+            let star = document.createElement("div");
+            star.classList.add("star");
+            
+            // Random position for stars
+            star.style.top = Math.random() * window.innerHeight + "px";
+            star.style.left = Math.random() * window.innerWidth + "px";
+
+            // Random size for stars
+            let size = Math.random() * 3;
+            star.style.width = size + "px";
+            star.style.height = size + "px";
+
+            // Random animation duration for stars
+            star.style.animationDuration = (Math.random() * 1 + 0.5) + "s";
+
+            document.body.appendChild(star);
+        }
+    
+document.addEventListener("mousemove", function(event) {
+    let windowCenterX = window.innerWidth / 2;
+    let cursorPositionX = event.clientX;
+    
+    let bendingFactor = (windowCenterX - cursorPositionX) / windowCenterX;  // Calculate the bending based on cursor position
+    
+    spaceship.style.transform = "translateX(" + bendingFactor * 20 + "px)";  // Apply the bending to spaceship
+    let rotationAngle = bendingFactor * 5;  // Calculate the rotation angle for the beam
+    document.getElementById('engineBeam').style.transform = "translateX(-50%) rotate(" + rotationAngle + "deg)";  // Rotate the beam
+});
+
+
+document.addEventListener("click", function(event) {
+    let bullet = document.createElement("div");
+    bullet.classList.add("bullet");
+    bullet.style.left = event.clientX - 2.5 + "px";  // Center the bullet on the cursor
+    bullet.style.top = event.clientY - 15 + "px";  // Position the bullet at the cursor position
+    
+    document.body.appendChild(bullet);
+    
+    // Remove the bullet from the DOM after its animation completes
+    setTimeout(() => {
+        document.body.removeChild(bullet);
+    }, 1000);
+});
+
+
+// Create meteorites periodically
+setInterval(createMeteorite, 2000);
+
+function createMeteorite() {
+    let meteorite = document.createElement("div");
+    meteorite.classList.add("meteorite");
+    meteorite.style.left = Math.random() * window.innerWidth - 20 + "px";  // Random horizontal position with adjustment
+    meteorite.style.top = "-50px";  // Start above the screen
+    
+    document.body.appendChild(meteorite);
+    
+    // Remove the meteorite from the DOM after its animation completes
+    setTimeout(() => {
+        document.body.removeChild(meteorite);
+    }, 5000);
+}
+
+// Check for bullet & meteorite collision using requestAnimationFrame
+function checkCollision() {
+    let bullets = document.querySelectorAll(".bullet");
+    let meteorites = document.querySelectorAll(".meteorite");
+    
+    bullets.forEach(bullet => {
+        meteorites.forEach(meteorite => {
+            if (isColliding(bullet, meteorite)) {
+                showExplosion(meteorite.getBoundingClientRect().left, meteorite.getBoundingClientRect().top);
+                document.body.removeChild(bullet);
+                document.body.removeChild(meteorite);
+            }
+        });
+    });
+    
+    requestAnimationFrame(checkCollision);  // Continuously check for collisions
+}
+
+function isColliding(el1, el2) {
+    let rect1 = el1.getBoundingClientRect();
+    let rect2 = el2.getBoundingClientRect();
+    
+    return !(rect1.right < rect2.left || 
+             rect1.left > rect2.right || 
+             rect1.bottom < rect2.top || 
+             rect1.top > rect2.bottom);
+}
+
+function showExplosion(x, y) {
+    let explosion = document.createElement("div");
+    explosion.classList.add("explosion");
+    explosion.style.left = x + "px";
+    explosion.style.top = y + "px";
+    
+    document.body.appendChild(explosion);
+    
+    // Remove the explosion from the DOM after its animation completes
+    setTimeout(() => {
+        document.body.removeChild(explosion);
+    }, 500);
+}
+
+checkCollision();  // Start the collision detection
+
+</script>
+</body>
+</html>
